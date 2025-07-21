@@ -1,1 +1,1 @@
-# Digitalisasi
+# Digitalisasi Silabus
