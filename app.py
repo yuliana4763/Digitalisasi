@@ -1,22 +1,9 @@
-# Instalasi pustaka yang diperlukan
-!pip install streamlit pdfkit pyngrok
-
-# Download dan setup wkhtmltopdf
-!apt-get update
-!apt-get install -y wkhtmltopdf
-
-# Buat direktori kerja
-!mkdir -p /content/app
-
 import streamlit as st
-import pdfkit
-import os
+from xhtml2pdf import pisa
+from io import BytesIO
 from datetime import date
 
-# Konfigurasi pdfkit 
-PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf="/usr/bin/wkhtmltopdf")
-
-# Fungsi: Membuat HTML lengkap dengan cover
+# Fungsi: Membuat HTML lengkap
 def generate_full_html(data):
     html = f"""
     <html>
@@ -51,8 +38,6 @@ def generate_full_html(data):
         </style>
     </head>
     <body>
-
-        <!-- COVER PAGE -->
         <div class="cover">
             <h1>{data['judul']}</h1>
             <p><strong>Silabus Pelatihan Micro Skill</strong></p>
@@ -62,54 +47,38 @@ def generate_full_html(data):
             <hr style="margin-top: 80px;">
         </div>
 
-        <!-- ISI SILABUS -->
         <div class="section">
             <h2>Deskripsi Pelatihan</h2>
             <p>{data['deskripsi']}</p>
-
             <h2>Durasi</h2>
             <p>{data['durasi']} jam</p>
-
             <h2>Target Peserta</h2>
             <p>{data['peserta']}</p>
-
             <h2>Tujuan Pembelajaran</h2>
             <p>{data['tujuan']}</p>
-
             <h2>Materi Pelatihan</h2>
             <table>
-                <tr>
-                    <th>No</th>
-                    <th>Topik</th>
-                    <th>Subtopik</th>
-                </tr>"""
-
+                <tr><th>No</th><th>Topik</th><th>Subtopik</th></tr>"""
     for i, (topik, subtopik) in enumerate(zip(data['topik'], data['subtopik']), 1):
-        html += f"""
-                <tr>
-                    <td>{i}</td>
-                    <td>{topik}</td>
-                    <td>{subtopik}</td>
-                </tr>"""
-
+        html += f"<tr><td>{i}</td><td>{topik}</td><td>{subtopik}</td></tr>"
     html += f"""
             </table>
             <br>
             <p><em>Disusun pada tanggal {date.today().strftime('%d %B %Y')}</em></p>
         </div>
-
     </body>
     </html>
     """
     return html
 
-# Fungsi: Simpan PDF
-def save_pdf(html_content, filename):
-    pdfkit.from_string(html_content, filename, configuration=PDFKIT_CONFIG)
+# Fungsi: Simpan PDF dari HTML (xhtml2pdf)
+def save_pdf(html_content):
+    result = BytesIO()
+    pisa.CreatePDF(src=html_content, dest=result)
+    return result
 
 # STREAMLIT APP
 st.title("📄 Digitalisasi Silabus Micro Skill")
-
 st.markdown("Isi data berikut untuk membuat silabus pelatihan secara otomatis dalam format PDF.")
 
 with st.form("form_silabus"):
@@ -147,14 +116,12 @@ if submit:
     }
 
     html_result = generate_full_html(data)
-    filename = "Silabus_MicroSkill.pdf"
-    save_pdf(html_result, filename)
+    pdf_file = save_pdf(html_result)
 
     st.success("✅ PDF berhasil dibuat!")
-    with open(filename, "rb") as file:
-        st.download_button(
-            label="📥 Download Silabus PDF",
-            data=file,
-            file_name=filename,
-            mime="application/pdf"
-        )
+    st.download_button(
+        label="📥 Download Silabus PDF",
+        data=pdf_file,
+        file_name="Silabus_MicroSkill.pdf",
+        mime="application/pdf"
+    )
