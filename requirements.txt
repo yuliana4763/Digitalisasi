@@ -1,4 +1,2 @@
 streamlit
-jinja2
-weasyprint
-Pillow
+pdfkit
