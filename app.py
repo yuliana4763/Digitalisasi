@@ -113,11 +113,21 @@ def save_pdf(html_content):
     return result
 
 # STREAMLIT APP
+if "topik_count" not in st.session_state:
+    st.session_state.topik_count = 1
+
 st.title("Digitalisasi Silabus Micro Skill")
 st.markdown("Isi data berikut untuk membuat silabus pelatihan secara otomatis dalam format PDF.")
 
-if "topik_count" not in st.session_state:
-    st.session_state.topik_count = 1
+# Tombol tambah/hapus topik di luar form
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("➕ Tambah Topik"):
+        st.session_state.topik_count += 1
+with col2:
+    if st.session_state.topik_count > 1:
+        if st.button("➖ Hapus Topik"):
+            st.session_state.topik_count -= 1
 
 with st.form("form_silabus"):
     st.subheader("Informasi Umum")
@@ -167,17 +177,6 @@ with st.form("form_silabus"):
         if topik and materi:
             materi_list = [m.strip() for m in materi.split(",") if m.strip()]
             topik_materi.append({"topik": topik, "materi": materi_list})
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.form_submit_button("➕ Tambah Topik"):
-            st.session_state.topik_count += 1
-            st.experimental_rerun()
-    with col2:
-        if st.session_state.topik_count > 1:
-            if st.form_submit_button("➖ Hapus Topik"):
-                st.session_state.topik_count -= 1
-                st.experimental_rerun()
 
     submit = st.form_submit_button("🚀 Buat PDF Silabus")
 
