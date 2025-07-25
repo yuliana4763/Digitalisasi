@@ -63,8 +63,8 @@ def generate_materi_page(topik_materi):
     return html
 
 def generate_full_html(data, topik_materi):
-    cover1_path = r"C:\Data Backup\KOMDIGI RI\digitalisasi silabus\silabus_microskill_app\Cover 1.png"
-    cover2_path = r"C:\Data Backup\KOMDIGI RI\digitalisasi silabus\silabus_microskill_app\Cover 2.png"
+    cover1_path = r"Cover 1.png"
+    cover2_path = r"Cover 2.png"
     return f"""
     <html>
     <head>
