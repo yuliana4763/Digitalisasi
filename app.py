@@ -172,7 +172,7 @@ with st.form("form_silabus"):
     for i in range(st.session_state.topik_count):
         topik = st.text_input(f"Topik {i+1}", key=f"topik_{i}")
         materi = st.text_area(
-            f"Materi untuk Topik {i+1} (pisahkan dengan koma)", key=f"materi_{i}"
+            f"Materi untuk Topik {i+1}", key=f"materi_{i}"
         )
         if topik and materi:
             materi_list = [m.strip() for m in materi.split(",") if m.strip()]
