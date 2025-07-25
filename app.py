@@ -2,6 +2,7 @@ import streamlit as st
 from xhtml2pdf import pisa
 from io import BytesIO
 import base64
+from datetime import datetime
 
 def encode_image_to_base64(image_path):
     with open(image_path, "rb") as img:
@@ -16,9 +17,28 @@ def generate_cover_page(image_path, page_break="after"):
     """
 
 def generate_info_page(data):
+    # Versi dan header tambahan
+    tanggal = datetime.now().strftime("%d%m%Y")
+    versi = f"Versi #Silabus-{tanggal}"
+    judul = data['Nama Pelatihan']
+    header = f"""
+    <div style="margin-bottom: 24px;">
+        <div style="font-size:16px; font-weight:bold; color:#1a237e;">{versi}</div>
+        <div style="font-size:22px; font-weight:bold; margin-top:8px;">Silabus {judul}</div>
+        <div style="font-size:16px; margin-top:4px;">Kementerian Komunikasi dan Digital Republik Indonesia</div>
+        <div style="font-size:16px; margin-top:2px;">Tahun 2025</div>
+    </div>
+    """
+    disclaimer = """
+    <div style="background-color:#fff3cd; color:#856404; border:1px solid #ffeeba; border-radius:6px; padding:16px; margin-bottom:24px;">
+        <b>Disclaimer:</b> Dokumen ini digunakan hanya untuk kebutuhan Digital Talent Scholarship Kementerian Komunikasi dan Digital Republik Indonesia. Konten ini mengandung Kekayaan Intelektual, pengguna tunduk kepada undang-undang hak cipta, merek dagang atau hak kekayaan intelektual lainnya. Dilarang untuk memproduksi, memodifikasi, menyebarluaskan, atau mengeksploitasi konten ini dengan cara atau bentuk apapun tanpa persetujuan tertulis dari Digital Talent Scholarship Kementerian Komunikasi dan Digital Republik Indonesia.
+    </div>
+    """
     return f"""
     <div class="page info" style="page-break-before: always; font-family: Arial, sans-serif;">
         <h2 style="text-align: center; color: #1a237e;">Informasi Umum Pelatihan</h2>
+        {header}
+        {disclaimer}
         <table style="width: 100%; border-collapse: collapse; margin-top: 30px;">
             <tr><td style="padding: 8px; width: 35%;"><b>Akademi</b></td><td style="padding: 8px;">{data['Akademi']}</td></tr>
             <tr><td style="padding: 8px;"><b>Penyelenggara Pelatihan</b></td><td style="padding: 8px;">{data['Penyelenggara Pelatihan']}</td></tr>
@@ -96,11 +116,41 @@ def save_pdf(html_content):
 st.title("Digitalisasi Silabus Micro Skill")
 st.markdown("Isi data berikut untuk membuat silabus pelatihan secara otomatis dalam format PDF.")
 
+if "topik_count" not in st.session_state:
+    st.session_state.topik_count = 1
+
 with st.form("form_silabus"):
     st.subheader("Informasi Umum")
-    akademi =  st.text_input("Akademi")
+    akademi = st.text_input("Akademi", value="Micro Skill")
     penyelenggara_pelatihan = st.text_input("Penyelenggara Pelatihan")
-    tema_pelatihan = st.text_input("Tema Pelatihan")
+    
+    tema_options = [
+        "Kewirausahaan Digital",
+        "ElevAIte",
+        "Konten Digital",
+        "Cakap Digital",
+        "Data Analisis",
+        "Kecerdasan Artifisial",
+        "Keamanan Informasi",
+        "Komunikasi",
+        "Pemrograman",
+        "Sistem Manajemen Keamanan Informasi",
+        "Mindset Digital",
+        "Teknologi Informasi",
+        "Pengantar SPBE",
+        "Etika dan Budaya Digital",
+        "Generative AI untuk Pendidikan",
+        "Ekonomi Digital",
+        "Bisnis Digital",
+        "Literasi Digital"
+    ]
+    tema_pelatihan = st.selectbox(
+        "Tema Pelatihan (pilih atau ketik manual)", 
+        options=tema_options + ["Lainnya (isi manual)"]
+    )
+    if tema_pelatihan == "Lainnya (isi manual)":
+        tema_pelatihan = st.text_input("Tema Pelatihan (isi manual)")
+
     nama_pelatihan = st.text_input("Nama Pelatihan")
     singkatan_pelatihan = st.text_input("Singkatan Pelatihan")
     durasi = st.number_input("Durasi (jam)", min_value=1)
@@ -109,12 +159,25 @@ with st.form("form_silabus"):
 
     st.subheader("Materi Pelatihan")
     topik_materi = []
-    for i in range(1, 4):
-        topik = st.text_input(f"Topik {i}", key=f"topik_{i}")
-        materi = st.text_area(f"Materi untuk Topik {i} (pisahkan dengan koma)", key=f"materi_{i}")
+    for i in range(st.session_state.topik_count):
+        topik = st.text_input(f"Topik {i+1}", key=f"topik_{i}")
+        materi = st.text_area(
+            f"Materi untuk Topik {i+1} (pisahkan dengan koma)", key=f"materi_{i}"
+        )
         if topik and materi:
             materi_list = [m.strip() for m in materi.split(",") if m.strip()]
             topik_materi.append({"topik": topik, "materi": materi_list})
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.form_submit_button("➕ Tambah Topik"):
+            st.session_state.topik_count += 1
+            st.experimental_rerun()
+    with col2:
+        if st.session_state.topik_count > 1:
+            if st.form_submit_button("➖ Hapus Topik"):
+                st.session_state.topik_count -= 1
+                st.experimental_rerun()
 
     submit = st.form_submit_button("🚀 Buat PDF Silabus")
 
