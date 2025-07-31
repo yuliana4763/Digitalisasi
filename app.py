@@ -3,10 +3,14 @@ from xhtml2pdf import pisa
 from io import BytesIO
 import base64
 from datetime import datetime
+import os
 
 def encode_image_to_base64(image_path):
-    with open(image_path, "rb") as img:
-        return base64.b64encode(img.read()).decode("utf-8")
+    try:
+        with open(image_path, "rb") as img:
+            return base64.b64encode(img.read()).decode("utf-8")
+    except FileNotFoundError:
+        return ""  # Return empty string if file not found
 
 def generate_cover_page(image_path, page_break="after"):
     encoded_image = encode_image_to_base64(image_path)
@@ -16,20 +20,27 @@ def generate_cover_page(image_path, page_break="after"):
     </div>
     """
 
-def generate_info_page(data):
-    # Path logo
-    logo_path = r"C:\Data Backup\KOMDIGI RI\digitalisasi silabus\silabus_microskill_app\logo microskill.png"
+def generate_info_page(data, logo_mitra_base64=None):
+    # Path logo microskill (relative path for GitHub repo)
+    logo_path = os.path.join(os.path.dirname(__file__), "logo microskill.png")
     encoded_logo = encode_image_to_base64(logo_path)
     # Versi dan header tambahan
     tanggal = datetime.now().strftime("%d%m%Y")
     versi = f"Versi #Silabus-{tanggal}"
     judul = data['Nama Pelatihan']
-    # Logo + header
+    # Logo + header (logo microskill kiri, logo mitra kanan)
+    logo_mitra_html = ""
+    if logo_mitra_base64:
+        logo_mitra_html = f"""
+        <img src="data:image/png;base64,{logo_mitra_base64}" 
+             style="height:1.08cm; width:3.3cm; object-fit:contain; display:block; margin-left:auto;"/>
+        """
     header = f"""
     <div style="margin-bottom: 24px;">
-        <div style="position:relative; height:1.08cm; margin-top:1cm; margin-bottom:0.5cm;">
+        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; margin-top:1cm; margin-bottom:0.5cm;">
             <img src="data:image/png;base64,{encoded_logo}" 
-                 style="height:1.08cm; width:3.3cm; object-fit:contain; display:block; margin-left:auto; margin-right:auto;" />
+                 style="height:1.08cm; width:3.3cm; object-fit:contain; display:block;" />
+            {logo_mitra_html}
         </div>
         <div style="font-size:10pt; font-style:italic; font-family:Cambria, serif; color:#000;">
             {versi}
@@ -98,7 +109,7 @@ def generate_materi_page(topik_materi):
     """
     return html
 
-def generate_full_html(data, topik_materi):
+def generate_full_html(data, topik_materi, logo_mitra_base64=None):
     cover1_path = r"Cover 1.png"
     cover2_path = r"Cover 2.png"
     cover1_base64 = encode_image_to_base64(cover1_path)
@@ -141,7 +152,7 @@ def generate_full_html(data, topik_materi):
     </head>
     <body>
         <div class="cover1"></div>
-        {generate_info_page(data)}
+        {generate_info_page(data, logo_mitra_base64)}
         {generate_materi_page(topik_materi)}
         <div class="cover2"></div>
     </body>
@@ -170,6 +181,13 @@ with col2:
     if st.session_state.topik_count > 1:
         if st.button("➖ Hapus Topik"):
             st.session_state.topik_count -= 1
+
+# Upload logo mitra di sidebar kanan atas
+st.sidebar.markdown("### Upload Logo Mitra")
+logo_mitra_file = st.sidebar.file_uploader("Logo Mitra (PNG/JPG)", type=["png", "jpg", "jpeg"])
+logo_mitra_base64 = None
+if logo_mitra_file is not None:
+    logo_mitra_base64 = base64.b64encode(logo_mitra_file.read()).decode("utf-8")
 
 with st.form("form_silabus"):
     st.subheader("Informasi Umum")
@@ -234,7 +252,7 @@ if submit:
         "Output Pelatihan": output_pelatihan
     }
 
-    html_result = generate_full_html(data, topik_materi)
+    html_result = generate_full_html(data, topik_materi, logo_mitra_base64)
     pdf_file = save_pdf(html_result)
 
     st.success("✅ PDF berhasil dibuat!")
