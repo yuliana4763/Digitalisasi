@@ -85,21 +85,24 @@ def generate_materi_page(topik_materi):
         <h2 style="text-align: center; color: #1a237e;">Materi dan Konten Pembelajaran Micro Skill</h2>
         <table style="width: 100%; border-collapse: collapse; margin-top: 30px;">
             <tr style="background-color: #f0f0f0;">
-                <th style="padding: 10px; text-align: left;">Topik</th>
+                <th style="padding: 10px; text-align: left; width: 30%;">Topik</th>
                 <th style="padding: 10px; text-align: left;">Materi</th>
             </tr>
     """
-    for topik in topik_materi:
+    for idx, topik in enumerate(topik_materi, start=1):
         html += f"""
             <tr>
-                <td style="padding: 10px; vertical-align: top;"><b>{topik['topik']}</b></td>
+                <td style="padding: 10px; vertical-align: top;">
+                    <b>Topik {idx}</b><br>{topik['topik']}
+                </td>
                 <td style="padding: 10px;">
-                    <ul style="margin: 0; padding-left: 18px;">
+                    Materi:
+                    <ol style="margin: 0; padding-left: 18px;">
         """
         for materi in topik["materi"]:
             html += f"<li>{materi}</li>"
         html += """
-                    </ul>
+                    </ol>
                 </td>
             </tr>
         """
