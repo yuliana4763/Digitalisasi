@@ -17,16 +17,32 @@ def generate_cover_page(image_path, page_break="after"):
     """
 
 def generate_info_page(data):
+    # Path logo
+    logo_path = r"C:\Data Backup\KOMDIGI RI\digitalisasi silabus\silabus_microskill_app\logo microskill.png"
+    encoded_logo = encode_image_to_base64(logo_path)
     # Versi dan header tambahan
     tanggal = datetime.now().strftime("%d%m%Y")
     versi = f"Versi #Silabus-{tanggal}"
     judul = data['Nama Pelatihan']
+    # Logo + header
     header = f"""
     <div style="margin-bottom: 24px;">
-        <div style="font-size:16px; font-weight:bold; color:#1a237e;">{versi}</div>
-        <div style="font-size:22px; font-weight:bold; margin-top:8px;">Silabus {judul}</div>
-        <div style="font-size:16px; margin-top:4px;">Kementerian Komunikasi dan Digital Republik Indonesia</div>
-        <div style="font-size:16px; margin-top:2px;">Tahun 2025</div>
+        <div style="position:relative; height:1.08cm; margin-top:1cm; margin-bottom:0.5cm;">
+            <img src="data:image/png;base64,{encoded_logo}" 
+                 style="height:1.08cm; width:3.3cm; object-fit:contain; display:block; margin-left:auto; margin-right:auto;" />
+        </div>
+        <div style="font-size:10pt; font-style:italic; font-family:Cambria, serif; color:#000;">
+            {versi}
+        </div>
+        <div style="font-size:22px; font-weight:bold; margin-top:8px; font-family:Cambria, serif; color:#1a237e;">
+            Silabus {judul}
+        </div>
+        <div style="font-size:16px; margin-top:4px; font-family:Cambria, serif; color:#1a237e;">
+            Kementerian Komunikasi dan Digital Republik Indonesia
+        </div>
+        <div style="font-size:16px; margin-top:2px; font-family:Cambria, serif; color:#1a237e;">
+            Tahun 2025
+        </div>
     </div>
     """
     disclaimer = """
@@ -35,8 +51,8 @@ def generate_info_page(data):
     </div>
     """
     return f"""
-    <div class="page info" style="page-break-before: always; font-family: Arial, sans-serif;">
-        <h2 style="text-align: center; color: #1a237e;">Informasi Umum Pelatihan</h2>
+    <div class="page info" style="page-break-before: always; font-family: Cambria, serif;">
+        <h2 style="text-align: center; color: #1a237e; font-family:Cambria, serif;">Informasi Umum Pelatihan</h2>
         {header}
         {disclaimer}
         <table style="width: 100%; border-collapse: collapse; margin-top: 30px;">
@@ -85,23 +101,49 @@ def generate_materi_page(topik_materi):
 def generate_full_html(data, topik_materi):
     cover1_path = r"Cover 1.png"
     cover2_path = r"Cover 2.png"
+    cover1_base64 = encode_image_to_base64(cover1_path)
+    cover2_base64 = encode_image_to_base64(cover2_path)
     return f"""
     <html>
     <head>
         <style>
-            body {{ font-family: Arial, sans-serif; margin: 40px; }}
-            .page {{ page-break-after: always; }}
-            .cover {{ text-align: center; margin-top: 150px; color: #0066cc; }}
-            .info {{ margin-top: 40px; }}
+            @page {{
+                size: A4;
+                margin: 0;
+            }}
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+            }}
+            .cover1 {{
+                background-image: url('data:image/png;base64,{cover1_base64}');
+                background-size: cover;
+                background-position: center;
+                width: 100vw;
+                height: 100vh;
+                page-break-after: always;
+            }}
+            .cover2 {{
+                background-image: url('data:image/png;base64,{cover2_base64}');
+                background-size: cover;
+                background-position: center;
+                width: 100vw;
+                height: 100vh;
+                page-break-before: always;
+            }}
+            .info {{
+                margin: 40px;
+            }}
             table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
             th, td {{ border: 1px solid #333; padding: 8px; text-align: left; }}
         </style>
     </head>
     <body>
-        {generate_cover_page(cover1_path, "after")}
+        <div class="cover1"></div>
         {generate_info_page(data)}
         {generate_materi_page(topik_materi)}
-        {generate_cover_page(cover2_path, "before")}
+        <div class="cover2"></div>
     </body>
     </html>
     """
