@@ -9,8 +9,18 @@ def encode_image_to_base64(image_path):
     try:
         with open(image_path, "rb") as img:
             return base64.b64encode(img.read()).decode("utf-8")
-    except FileNotFoundError:
-        return ""  # Return empty string if file not found
+    except Exception:
+        return ""
+
+def generate_header_with_logos(micro_path, mitra_path):
+    micro_logo = encode_image_to_base64(micro_path)
+    mitra_logo = encode_image_to_base64(mitra_path) if mitra_path else ""
+    return f"""
+    <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-top:1cm; margin-bottom:1cm;">
+        <img src="data:image/png;base64,{micro_logo}" style="height:1.08cm; width:3.3cm; object-fit:contain;" />
+        {'<img src="data:image/png;base64,' + mitra_logo + '" style="height:1.08cm; width:3.3cm; object-fit:contain;" />' if mitra_logo else ''}
+    </div>
+    """
 
 def generate_cover_page(image_path, page_break="after"):
     encoded_image = encode_image_to_base64(image_path)
@@ -112,6 +122,46 @@ def generate_materi_page(topik_materi):
     """
     return html
 
+def generate_page3_dynamic(materi_data):
+    html = """
+    <div class="page" style="page-break-before: always; font-family: Arial, sans-serif;">
+        <h2 style="text-align: center; color: #1a237e;">Materi dan Konten Pembelajaran Micro Skill</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11pt;">
+            <tr style="background-color: #007bff; color: white; text-align: center;">
+                <th style="padding: 8px; width: 25%;">Topik</th>
+                <th style="padding: 8px; width: 55%;">Materi</th>
+                <th style="padding: 8px; width: 20%;">JP</th>
+            </tr>
+    """
+
+    for topik in materi_data:
+        materi_list = topik.get('materi', [])
+        jp = topik.get('jp', '')
+        rowspan = len(materi_list) if materi_list else 1
+        # Row pertama untuk topik (pakai rowspan)
+        html += f"""
+        <tr>
+            <td rowspan="{rowspan}" style="border: 1px solid #000; padding: 8px; vertical-align: top;">
+                {topik['topik']}
+            </td>
+            <td style="border: 1px solid #000; padding: 8px;">{materi_list[0] if materi_list else ''}</td>
+            <td rowspan="{rowspan}" style="border: 1px solid #000; text-align: center;">
+                {jp}
+            </td>
+        </tr>
+        """
+
+        # Materi berikutnya
+        for materi in materi_list[1:]:
+            html += f"""
+            <tr>
+                <td style="border: 1px solid #000; padding: 8px;">{materi}</td>
+            </tr>
+            """
+
+    html += "</table></div>"
+    return html
+
 def generate_full_html(data, topik_materi, logo_mitra_base64=None):
     cover1_path = r"Cover 1.png"
     cover2_path = r"Cover 2.png"
@@ -130,20 +180,20 @@ def generate_full_html(data, topik_materi, logo_mitra_base64=None):
                 margin: 0;
                 padding: 0;
             }}
+            .cover {{
+                width: 100vw;
+                height: 100vh;
+                page-break-after: always;
+            }}
             .cover1 {{
                 background-image: url('data:image/png;base64,{cover1_base64}');
                 background-size: cover;
                 background-position: center;
-                width: 100vw;
-                height: 100vh;
-                page-break-after: always;
             }}
             .cover2 {{
                 background-image: url('data:image/png;base64,{cover2_base64}');
                 background-size: cover;
                 background-position: center;
-                width: 100vw;
-                height: 100vh;
                 page-break-before: always;
             }}
             .info {{
@@ -154,10 +204,14 @@ def generate_full_html(data, topik_materi, logo_mitra_base64=None):
         </style>
     </head>
     <body>
-        <div class="cover1"></div>
+        <!-- Cover 1 as page 1 -->
+        <div class="cover cover1"></div>
+        <!-- Info Page as page 2 -->
         {generate_info_page(data, logo_mitra_base64)}
+        <!-- Materi Page as page 3 -->
         {generate_materi_page(topik_materi)}
-        <div class="cover2"></div>
+        <!-- Cover 2 as page 4 -->
+        <div class="cover cover2"></div>
     </body>
     </html>
     """
