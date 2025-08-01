@@ -235,7 +235,7 @@ def generate_full_html(data, topik_materi):
         <pdf:nextpage /> 
         
         <pdf:nexttemplate name="content_page_template" />
-        {generate_info_page(data, encoded_logo)} <pdf:nextpage />
+        {generate_info_page(data)} <pdf:nextpage />
         {generate_materi_page(topik_materi)}
 
         <pdf:nexttemplate name="cover_last_template" /> 
